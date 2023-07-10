@@ -1,10 +1,18 @@
-import express from "express";
-import http from "http";
-import { Server as SocketIOServer } from "socket.io";
-import { v4 as uuidv4 } from "uuid";
-import bodyParser from "body-parser";
-import chalk from "chalk";
-import dotenv from "dotenv";
+import express from 'express';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { v4 as uuidv4 } from 'uuid';
+import session from 'express-session';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import bcrypt from 'bcrypt';
+import bodyParser from 'body-parser';
+import chalk from 'chalk';
+import connectDB from './config/db.js';
+// import { validateMessage } from './validation.js';
+import Message from './models/chat.js';
+import User from './models/user.js';
+
 dotenv.config();
 import { validateMessage } from "./hooks/validators.js";
 
