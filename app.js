@@ -11,8 +11,8 @@ import chalk from "chalk";
 import connectDB from "./config/db.js";
 import { validateMessage } from "./hooks/validators.js";
 
-import messagesRouter from "./routes/messages.js";
-import userRouter from "./routes/user.js";
+import messagesRouter from "./routes/messageRoutes.js";
+import userRouter from "./routes/authRoutes.js";
 
 dotenv.config();
 
