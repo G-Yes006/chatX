@@ -14,6 +14,7 @@ import { validateMessage } from "./hooks/validators.js";
 import messagesRouter from "./routes/messageRoutes.js";
 import userRouter from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import limiter from "./middlewares/rateLimitMiddleware.js";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-
+app.use(limiter);
 // Serve static files from the public directory
 app.use(express.static("public"));
 
