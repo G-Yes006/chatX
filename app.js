@@ -15,7 +15,9 @@ import messagesRouter from "./routes/messageRoutes.js";
 import userRouter from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import limiter from "./middlewares/rateLimitMiddleware.js";
-import monitoringMiddleware from "./middlewares/monitoringMiddleware.js"
+import monitoringMiddleware from "./middlewares/monitoringMiddleware.js";
+import { dataSanitizationMiddleware } from "./middlewares/dataSanitizationMiddleware.js";
+import loggingMiddleware from "./middlewares/loggingMiddleware.js";
 
 dotenv.config();
 
@@ -38,7 +40,10 @@ app.use(limiter);
 app.use(express.static("public"));
 // Add the monitoring middleware
 app.use(monitoringMiddleware);
-
+// Add the dataSanitizationMiddleware as a global middleware
+app.use(dataSanitizationMiddleware);
+// Add the logging middleware
+app.use(loggingMiddleware);
 // Connect to MongoDB
 connectDB();
 
