@@ -15,6 +15,7 @@ import messagesRouter from "./routes/messageRoutes.js";
 import userRouter from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import limiter from "./middlewares/rateLimitMiddleware.js";
+import monitoringMiddleware from "./middlewares/monitoringMiddleware.js"
 
 dotenv.config();
 
@@ -35,6 +36,8 @@ app.use(passport.session());
 app.use(limiter);
 // Serve static files from the public directory
 app.use(express.static("public"));
+// Add the monitoring middleware
+app.use(monitoringMiddleware);
 
 // Connect to MongoDB
 connectDB();
@@ -109,5 +112,5 @@ app.use("/profile", profileRoutes);
 // Start the server
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
-  console.log(chalk.blue(`Server running on http://localhost:${port}`));
+  console.log(chalk.magenta(`Server running on http://localhost:${port}`));
 });
