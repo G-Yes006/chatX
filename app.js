@@ -13,6 +13,7 @@ import { validateMessage } from "./hooks/validators.js";
 
 import messagesRouter from "./routes/messageRoutes.js";
 import userRouter from "./routes/authRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 dotenv.config();
 
@@ -102,6 +103,7 @@ io.use(authenticateSocket).on("connection", (socket) => {
 // REST API endpoints
 app.use("/messages", messagesRouter);
 app.use("/users", userRouter);
+app.use("/profile", profileRoutes);
 
 // Start the server
 const port = process.env.PORT || 3000;
