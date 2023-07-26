@@ -1,8 +1,9 @@
 import express from "express";
 import { authenticateToken } from "../middlewares/auth.js";
 import Message from "../models/chat.js";
-import { messageSchema } from "../validations/messageValidation.js";
 import chalk from "chalk";
+import { messageSchema } from "../validations/messageValidation.js";
+import AppError from "../hooks/customErrors.js"; // Import the AppError class
 
 const router = express.Router();
 
@@ -22,13 +23,10 @@ router.post("/sendMessage", authenticateToken, async (req, res) => {
   try {
     const { userId, message } = req.body;
 
-    // Validate the request body
+    // Validate the request body using Joi schema
     const { error } = messageSchema.validate({ userId, message });
     if (error) {
-      console.log(chalk.red("Validation error:"), error.details[0].message);
-      return res
-        .status(400)
-        .json({ success: false, error: error.details[0].message });
+      throw new AppError(error.details[0].message, 400);
     }
 
     // Create a new message
@@ -44,8 +42,10 @@ router.post("/sendMessage", authenticateToken, async (req, res) => {
       data: { message: message },
     });
   } catch (error) {
-    console.error(chalk.red("Error sending message:"), error);
-    res.status(500).json({ success: false, error: "Server error" });
+    console.error(chalk.red("Error sending message:"), error.message);
+    res
+      .status(error.statusCode || 500)
+      .json({ success: false, error: error.message });
   }
 });
 
@@ -55,32 +55,22 @@ router.put("/:id", authenticateToken, async (req, res) => {
     const { userId, message } = req.body;
     const messageId = req.params.id;
 
-    // Validate the request body
+    // Validate the request body using Joi schema
     const { error } = messageSchema.validate({ userId, message });
     if (error) {
-      console.log(chalk.red("Validation error:"), error.details[0].message);
-      return res
-        .status(400)
-        .json({ success: false, error: error.details[0].message });
+      throw new AppError(error.details[0].message, 400);
     }
 
     // Check if the message exists
     const existingMessage = await Message.findById(messageId);
 
     if (!existingMessage) {
-      console.log(chalk.red("Message not found"));
-      return res
-        .status(404)
-        .json({ success: false, error: "Message not found" });
+      throw new AppError("Message not found", 404);
     }
 
     // Check if the user is the owner of the message
     if (existingMessage.userId !== userId) {
-      console.log(chalk.red("You are not authorized to update this message"));
-      return res.status(403).json({
-        success: false,
-        error: "You are not authorized to update this message",
-      });
+      throw new AppError("You are not authorized to update this message", 403);
     }
 
     // Update the message
@@ -92,8 +82,10 @@ router.put("/:id", authenticateToken, async (req, res) => {
 
     res.json({ success: true, message: "Message updated successfully" });
   } catch (error) {
-    console.error(chalk.red("Error updating message:"), error);
-    res.status(500).json({ success: false, error: "Server error" });
+    console.error(chalk.red("Error updating message:"), error.message);
+    res
+      .status(error.statusCode || 500)
+      .json({ success: false, error: error.message });
   }
 });
 
@@ -103,32 +95,22 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     const { userId } = req.body;
     const messageId = req.params.id;
 
-    // Validate the request body
+    // Validate the request body using Joi schema
     const { error } = messageSchema.validate({ userId });
     if (error) {
-      console.log(chalk.red("Validation error:"), error.details[0].message);
-      return res
-        .status(400)
-        .json({ success: false, error: error.details[0].message });
+      throw new AppError(error.details[0].message, 400);
     }
 
     // Check if the message exists
     const existingMessage = await Message.findById(messageId);
 
     if (!existingMessage) {
-      console.log(chalk.red("Message not found"));
-      return res
-        .status(404)
-        .json({ success: false, error: "Message not found" });
+      throw new AppError("Message not found", 404);
     }
 
     // Check if the user is the owner of the message
     if (existingMessage.userId !== userId) {
-      console.log(chalk.red("You are not authorized to delete this message"));
-      return res.status(403).json({
-        success: false,
-        error: "You are not authorized to delete this message",
-      });
+      throw new AppError("You are not authorized to delete this message", 403);
     }
 
     // Delete the message
@@ -138,8 +120,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     res.json({ success: true, message: "Message deleted successfully" });
   } catch (error) {
-    console.error(chalk.red("Error deleting message:"), error);
-    res.status(500).json({ success: false, error: "Server error" });
+    console.error(chalk.red("Error deleting message:"), error.message);
+    res
+      .status(error.statusCode || 500)
+      .json({ success: false, error: error.message });
   }
 });
 

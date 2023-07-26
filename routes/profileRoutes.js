@@ -3,6 +3,8 @@ import User from "../models/user.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import { upload, handleMulterError } from "../middlewares/multerValidation.js";
 import chalk from "chalk";
+import AppError from "./../hooks/customErrors.js"; // Import the AppError class
+import { updateProfileSchema } from "./../validations/profileValidation.js";
 
 const router = express.Router();
 
@@ -12,15 +14,15 @@ router.get("/getProfileDetails", authenticateToken, async (req, res) => {
     const user = await User.findById(req.user.userId);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      throw new AppError("User not found", 404);
     }
 
     res.json({ success: true, user });
   } catch (error) {
-    console.error(chalk.red("Error retrieving user profile:"), error);
-    res.status(500).json({ success: false, error: "Server error" });
+    console.error(chalk.red("Error retrieving user profile:"), error.message);
+    res
+      .status(error.statusCode || 500)
+      .json({ success: false, error: error.message });
   }
 });
 
@@ -33,6 +35,13 @@ router.patch(
   async (req, res) => {
     try {
       const { status, bio } = req.body;
+
+      // Validate user input using Joi schema
+      const { error } = updateProfileSchema.validate({ status, bio });
+      if (error) {
+        throw new AppError(error.details[0].message, 400);
+      }
+
       const profilePicture = req.file ? req.file.filename : undefined;
 
       const user = await User.findByIdAndUpdate(
@@ -42,15 +51,15 @@ router.patch(
       );
 
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
+        throw new AppError("User not found", 404);
       }
 
       res.json({ success: true, user });
     } catch (error) {
       console.error(chalk.red("Error updating user profile:"), error.message);
-      res.status(500).json({ success: false, error: "Server error" });
+      res
+        .status(error.statusCode || 500)
+        .json({ success: false, error: error.message });
     }
   }
 );
