@@ -1,7 +1,6 @@
 import chalk from "chalk";
 
-// Monitoring middleware
-const monitoringMiddleware = (req, res, next) => {
+const apiLoggerAndMonitoringMiddleware = (req, res, next) => {
   // Log request information
   console.log(
     chalk.blue("Request:"),
@@ -47,4 +46,4 @@ const monitoringMiddleware = (req, res, next) => {
   next();
 };
 
-export default monitoringMiddleware;
+export default apiLoggerAndMonitoringMiddleware;

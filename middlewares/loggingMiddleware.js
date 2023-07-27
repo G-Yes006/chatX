@@ -1,4 +1,4 @@
-import logger from "./../helper/logger.js";
+import logger from "./../helpers/logger.js";
 import chalk from "chalk";
 
 const loggingMiddleware = (err, req, res, next) => {
