@@ -6,12 +6,18 @@ import AppError from "../hooks/customErrors.js"; // Import the AppError class
 import { authenticateToken } from "../middlewares/auth.js";
 import User from "../models/user.js";
 import { registerSchema, loginSchema } from "../validations/authValidation.js";
+import { dataSanitizationMiddleware } from "./../middlewares/dataSanitizationMiddleware.js";
+import updateUserOnlineStatus from "./../helpers/updateUserOnlineStatus.js"; // Import the updateUserOnlineStatus function
+import { asyncHandler } from "../middlewares/asyncHandler.js"; // Custom asyncHandler middleware
+import { ErrorResponse, SuccessResponse } from "../helpers/response.js"; // Import the response constructors
 
 const router = express.Router();
 
 // Register a new user
-router.post("/register", async (req, res) => {
-  try {
+router.post(
+  "/register",
+  dataSanitizationMiddleware,
+  asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
     // Validate the request body using Joi schema
@@ -35,20 +41,20 @@ router.post("/register", async (req, res) => {
 
     console.log(chalk.green("User registered successfully"));
 
-    res
-      .status(201)
-      .json({ success: true, message: "User registered successfully" });
-  } catch (error) {
-    console.error(chalk.red("Error registering user:"), error.message);
-    res
-      .status(error.statusCode || 500)
-      .json({ success: false, error: error.message });
-  }
-});
+    const successResponse = new SuccessResponse({
+      message: "User registered successfully",
+    });
+    successResponse.log();
+
+    res.status(201).json(successResponse);
+  })
+);
 
 // Log in a user
-router.post("/login", async (req, res) => {
-  try {
+router.post(
+  "/login",
+  dataSanitizationMiddleware,
+  asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     // Validate the request body using Joi schema
@@ -78,31 +84,37 @@ router.post("/login", async (req, res) => {
 
     console.log(chalk.green("User logged in successfully"));
 
-    res.status(200).json({ success: true, token });
-  } catch (error) {
-    console.error(chalk.red("Error logging in user:"), error.message);
-    res
-      .status(error.statusCode || 500)
-      .json({ success: false, error: error.message });
-  }
-});
+    // User logs in, update online status to true
+    updateUserOnlineStatus(user._id, true);
+
+    const successResponse = new SuccessResponse({ token });
+    successResponse.log();
+
+    res.status(200).json(successResponse);
+  })
+);
 
 // Log out a user
-router.get("/logout", authenticateToken, (req, res) => {
-  try {
-    // Perform any additional logout actions if needed
+router.get(
+  "/logout",
+  authenticateToken,
+  dataSanitizationMiddleware,
+  asyncHandler(async (req, res) => {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
 
     console.log(chalk.green("User logged out successfully"));
 
-    res
-      .status(200)
-      .json({ success: true, message: "User logged out successfully" });
-  } catch (error) {
-    console.error(chalk.red("Error logging out user:"), error.message);
-    res
-      .status(error.statusCode || 500)
-      .json({ success: false, error: error.message });
-  }
-});
+    // Update user's online status to false when they log out
+    updateUserOnlineStatus(userId, false);
+
+    const successResponse = new SuccessResponse({
+      message: "User logged out successfully",
+    });
+    successResponse.log();
+
+    res.status(200).json(successResponse);
+  })
+);
 
 export default router;

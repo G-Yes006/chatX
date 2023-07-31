@@ -11,7 +11,7 @@ import chalk from "chalk";
 import connectDB from "./config/db.js";
 import { validateMessage } from "./hooks/validators.js";
 
-import messagesRouter from "./routes/messageRoutes.js";
+import chatRouter from "./routes/chatRoutes.js";
 import userRouter from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import limiter from "./middlewares/rateLimitMiddleware.js";
@@ -68,13 +68,14 @@ const authenticateSocket = (socket, next) => {
 };
 
 // Handle socket connections
-io.use(authenticateSocket).on("connection", (socket) => {
+const chatNamespace = io.of("/chat");
+chatNamespace.use(authenticateSocket).on("connection", (socket) => {
   console.log(chalk.green("A user connected"));
 
   const userId = socket.userId;
 
   // Notify all connected users about the new user
-  io.emit("user connected", userId);
+  chatNamespace.emit("user connected", userId);
 
   // Listen for chat messages
   socket.on("chat message", (message) => {
@@ -97,7 +98,7 @@ io.use(authenticateSocket).on("connection", (socket) => {
       .save()
       .then(() => {
         // Broadcast the message to all connected clients
-        io.emit("chat message", { userId, message });
+        chatNamespace.emit("chat message", { userId, message });
       })
       .catch((error) => {
         console.error(chalk.red("Error saving message to MongoDB:"), error);
@@ -107,12 +108,12 @@ io.use(authenticateSocket).on("connection", (socket) => {
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log(chalk.red("A user disconnected"));
-    io.emit("user disconnected", userId);
+    chatNamespace.emit("user disconnected", userId);
   });
 });
 
 // REST API endpoints
-app.use("/messages", messagesRouter);
+app.use("/chats", chatRouter);
 app.use("/users", userRouter);
 app.use("/profile", profileRoutes);
 

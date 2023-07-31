@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
     bio: {
       type: String,
       default: null,

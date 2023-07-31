@@ -26,7 +26,13 @@ const apiLoggerAndMonitoringMiddleware = (req, res, next) => {
     // Log response size (content length) if available
     const contentLength = res.getHeader("Content-Length");
     if (contentLength) {
-      console.log(chalk.blue("Response Size:"), chalk.yellow(contentLength));
+      const contentSizeInKB = contentLength / 1024;
+      const contentSizeText =
+        contentSizeInKB >= 1
+          ? `${contentSizeInKB} KB`
+          : `${contentLength} bytes`;
+
+      console.log(chalk.blue("Response Size:"), chalk.yellow(contentSizeText));
     }
 
     // Log any errors or warnings sent in the response
