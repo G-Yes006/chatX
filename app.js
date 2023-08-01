@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import chalk from "chalk";
+import { generateChatRoomName } from "./helpers/privateChat.js"; // Import the generateChatRoomName function
 
 import connectDB from "./config/db.js";
 import { validateMessage } from "./hooks/validators.js";
@@ -68,7 +69,7 @@ const authenticateSocket = (socket, next) => {
 };
 
 // Handle socket connections
-const chatNamespace = io.of("/chat");
+const chatNamespace = io.of("/chats");
 chatNamespace.use(authenticateSocket).on("connection", (socket) => {
   console.log(chalk.green("A user connected"));
 
@@ -103,6 +104,30 @@ chatNamespace.use(authenticateSocket).on("connection", (socket) => {
       .catch((error) => {
         console.error(chalk.red("Error saving message to MongoDB:"), error);
       });
+  });
+
+  // Handle private chat initiation
+  socket.on("start private chat", (otherUserId) => {
+    const chatRoomName = generateChatRoomName(socket.userId, otherUserId);
+
+    // Join the private chat room with the generated name
+    socket.join(chatRoomName);
+
+    console.log(chalk.green(`Private chat room "${chatRoomName}" created`));
+
+    // Notify the other user to join the private chat room as well
+    io.to(otherUserId).emit("join private chat", chatRoomName);
+  });
+
+  // Handle private chat messages
+  socket.on("private chat message", ({ chatRoomName, message }) => {
+    console.log(
+      chalk.yellow(`Private message received in chat room "${chatRoomName}":`),
+      message
+    );
+
+    // Emit the message to the specific private chat room
+    io.to(chatRoomName).emit("private chat message", message);
   });
 
   // Handle disconnection
