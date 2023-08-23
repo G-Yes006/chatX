@@ -1,13 +1,12 @@
 import winston from "winston";
 import fs from "fs";
 import path from "path";
+import url from "url";
 import chalk from "chalk";
 
 // Get the directory name of the current module
-const logsDirectory = path.join(
-  path.dirname(new URL(import.meta.url).pathname),
-  "./../logs"
-);
+const __filename = url.fileURLToPath(import.meta.url);
+const logsDirectory = path.join(path.dirname(__filename), "../logs");
 
 // Create logs directory if it does not exist
 if (!fs.existsSync(logsDirectory)) {

@@ -67,14 +67,14 @@ router.post(
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new AppError("Invalid credentials", 401);
+      throw new AppError("Invalid credentials", 404);
     }
 
     // Compare the provided password with the stored password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw new AppError("Invalid credentials", 401);
+      throw new AppError("Invalid credentials", 404);
     }
 
     // Generate a JWT token
